@@ -1,20 +1,33 @@
 {
-    "name": "pdiveris/cache",
-    "description": "My 10th Composer Failure",
+    "name": "elucidate/cache",
+    "description": "The Elucidate Cache package.",
     "license": "MIT",
+    "homepage": "http://bentleysoft.com",
+    "support": {
+        "issues": "https://github.com/pdiveris/cache/issues",
+        "source": "https://github.com/laravel/cache"
+    },
     "authors": [
         {
             "name": "Petros Diveris",
-            "email": "petros@diveris.org"
+            "email": "pdiveris@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=5.5.9",
+        "illuminate/contracts": "5.0.*",
+        "illuminate/support": "5.0.*",
+        "nesbot/carbon": "~1.19"
     },
     "autoload": {
         "psr-0": {
-            "HelloWorld": "src/"
+            "Elucidate": "src/"
         }
-    }
+    },
+    "suggest": {
+        "illuminate/database": "Required to use the database cache driver (5.2.*).",
+        "illuminate/filesystem": "Required to use the file cache driver (5.2.*).",
+        "illuminate/redis": "Required to use the redis cache driver (5.2.*)."
+    },
+    "minimum-stability": "dev"
 }

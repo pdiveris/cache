@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php'; // Autoload files using Composer autoload
 
-use HelloWorld\SayHello;
+use Elucidate\SayHello;
 
 echo SayHello::world();
 
