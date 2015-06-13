@@ -43,11 +43,37 @@ class RedisStore extends TaggableStore implements Store
    /**
     * @param string $pattern
     * @return mixed
+    * @author PD
     */
-    public function keys($pattern = '*') {
+    public function keys($pattern = '*') 
+    {
       $keys = $this->connection()->keys($pattern);
       return $keys;
     }
+
+   /**
+    * @param string $key
+    * @return integer ttl
+    * @author PD
+    */
+    public function ttl($key = '') 
+    {
+      $ttl = $this->connection()->ttl($key);
+      return $ttl;
+    }
+
+   /**
+    * @param string $key
+    * @return integer ttl
+    * @author PD
+    */
+    public function type($key = '') 
+    {
+      $type = $this->connection()->type($key);
+      return $type;
+    }
+
+
 
     /**
      * Retrieve an item from the cache by key.
@@ -58,7 +84,7 @@ class RedisStore extends TaggableStore implements Store
     public function get($key)
     {
         if (!is_null($value = $this->connection()->get($this->prefix.$key))) {
-            return is_numeric($value) ? $value : unserialize($value);
+            return is_numeric($value) ? $value : unserialize($value);            
         }
     }
 
