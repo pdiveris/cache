@@ -5,214 +5,225 @@ use Illuminate\Redis\Database as Redis;
 
 class RedisStore extends TaggableStore implements Store
 {
-    /**
-     * The Redis database connection.
-     *
-     * @var \Illuminate\Redis\Database
-     */
-    protected $redis;
+  /**
+   * The Redis database connection.
+   *
+   * @var \Illuminate\Redis\Database
+   */
+  protected $redis;
 
-    /**
-     * A string that should be prepended to keys.
-     *
-     * @var string
-     */
-    protected $prefix;
+  /**
+   * A string that should be prepended to keys.
+   *
+   * @var string
+   */
+  protected $prefix;
 
-    /**
-     * The Redis connection that should be used.
-     *
-     * @var string
-     */
-    protected $connection;
+  /**
+   * The Redis connection that should be used.
+   *
+   * @var string
+   */
+  protected $connection;
 
-    /**
-     * Create a new Redis store.
-     *
-     * @param  \Illuminate\Redis\Database  $redis
-     * @param  string  $prefix
-     * @param  string  $connection
-     */
-    public function __construct(Redis $redis, $prefix = '', $connection = 'default')
-    {
-        $this->redis = $redis;
-        $this->connection = $connection;
-        $this->prefix = strlen($prefix) > 0 ? $prefix.':' : '';
-    }
-
-   /**
-    * @param string $pattern
-    * @return mixed
-    * @author PD
-    */
-    public function keys($pattern = '*') 
-    {
-      $keys = $this->connection()->keys($pattern);
-      return $keys;
-    }
+  /**
+   * Create a new Redis store.
+   *
+   * @param  \Illuminate\Redis\Database  $redis
+   * @param  string  $prefix
+   * @param  string  $connection
+   */
+  public function __construct(Redis $redis, $prefix = '', $connection = 'default')
+  {
+    $this->redis = $redis;
+    $this->connection = $connection;
+    $this->prefix = strlen($prefix) > 0 ? $prefix.':' : '';
+  }
 
    /**
-    * @param string $key
-    * @return integer ttl
-    * @author PD
-    */
-    public function ttl($key = '') 
-    {
-      $ttl = $this->connection()->ttl($key);
-      return $ttl;
-    }
+  * @param string $pattern
+  * @return mixed
+  * @author PD
+  */
+  public function keys($pattern = '*') 
+  {
+    $keys = $this->connection()->keys($pattern);
+    return $keys;
+  }
 
    /**
-    * @param string $key
-    * @return integer ttl
-    * @author PD
-    */
-    public function type($key = '') 
-    {
-      $type = $this->connection()->type($key);
-      return $type;
+  * @param string $key
+  * @return integer ttl
+  * @author PD
+  */
+  public function ttl($key = '') 
+  {
+    $ttl = $this->connection()->ttl($key);
+    return $ttl;
+  }
+
+   /**
+  * @param string $key
+  * @return string type
+  * @author PD
+  */
+  public function type($key = '') 
+  {
+    $type = $this->connection()->type($key);
+    return $type;
+  }
+
+   /**
+  * @param string $key
+  * @return integer strlen
+  * @author PD
+  */
+  public function strlen($key = '') 
+  {
+    $strlen = $this->connection()->strlen($key);
+    return $strlen;
+  }
+
+
+
+  /**
+   * Retrieve an item from the cache by key.
+   *
+   * @param  string  $key
+   * @return mixed
+   */
+  public function get($key)
+  {
+    if (!is_null($value = $this->connection()->get($this->prefix.$key))) {
+      return $value;
     }
+  }
 
+  /**
+   * Store an item in the cache for a given number of minutes.
+   *
+   * @param  string  $key
+   * @param  mixed   $value
+   * @param  int     $minutes
+   * @return void
+   */
+  public function put($key, $value, $minutes)
+  {
+    $value = is_numeric($value) ? $value : serialize($value);
 
+    $minutes = max(1, $minutes);
 
-    /**
-     * Retrieve an item from the cache by key.
-     *
-     * @param  string  $key
-     * @return mixed
-     */
-    public function get($key)
-    {
-        if (!is_null($value = $this->connection()->get($this->prefix.$key))) {
-            return is_numeric($value) ? $value : unserialize($value);            
-        }
-    }
+    $this->connection()->setex($this->prefix.$key, $minutes * 60, $value);
+  }
 
-    /**
-     * Store an item in the cache for a given number of minutes.
-     *
-     * @param  string  $key
-     * @param  mixed   $value
-     * @param  int     $minutes
-     * @return void
-     */
-    public function put($key, $value, $minutes)
-    {
-        $value = is_numeric($value) ? $value : serialize($value);
+  /**
+   * Increment the value of an item in the cache.
+   *
+   * @param  string  $key
+   * @param  mixed   $value
+   * @return int
+   */
+  public function increment($key, $value = 1)
+  {
+    return $this->connection()->incrby($this->prefix.$key, $value);
+  }
 
-        $minutes = max(1, $minutes);
+  /**
+   * Increment the value of an item in the cache.
+   *
+   * @param  string  $key
+   * @param  mixed   $value
+   * @return int
+   */
+  public function decrement($key, $value = 1)
+  {
+    return $this->connection()->decrby($this->prefix.$key, $value);
+  }
 
-        $this->connection()->setex($this->prefix.$key, $minutes * 60, $value);
-    }
+  /**
+   * Store an item in the cache indefinitely.
+   *
+   * @param  string  $key
+   * @param  mixed   $value
+   * @return void
+   */
+  public function forever($key, $value)
+  {
+    $value = is_numeric($value) ? $value : serialize($value);
 
-    /**
-     * Increment the value of an item in the cache.
-     *
-     * @param  string  $key
-     * @param  mixed   $value
-     * @return int
-     */
-    public function increment($key, $value = 1)
-    {
-        return $this->connection()->incrby($this->prefix.$key, $value);
-    }
+    $this->connection()->set($this->prefix.$key, $value);
+  }
 
-    /**
-     * Increment the value of an item in the cache.
-     *
-     * @param  string  $key
-     * @param  mixed   $value
-     * @return int
-     */
-    public function decrement($key, $value = 1)
-    {
-        return $this->connection()->decrby($this->prefix.$key, $value);
-    }
+  /**
+   * Remove an item from the cache.
+   *
+   * @param  string  $key
+   * @return bool
+   */
+  public function forget($key)
+  {
+    return (bool) $this->connection()->del($this->prefix.$key);
+  }
 
-    /**
-     * Store an item in the cache indefinitely.
-     *
-     * @param  string  $key
-     * @param  mixed   $value
-     * @return void
-     */
-    public function forever($key, $value)
-    {
-        $value = is_numeric($value) ? $value : serialize($value);
+  /**
+   * Remove all items from the cache.
+   *
+   * @return void
+   */
+  public function flush()
+  {
+    $this->connection()->flushdb();
+  }
 
-        $this->connection()->set($this->prefix.$key, $value);
-    }
+  /**
+   * Begin executing a new tags operation.
+   *
+   * @param  array|mixed  $names
+   * @return \Elucidate\Cache\RedisTaggedCache
+   */
+  public function tags($names)
+  {
+    return new RedisTaggedCache($this, new TagSet($this, is_array($names) ? $names : func_get_args()));
+  }
 
-    /**
-     * Remove an item from the cache.
-     *
-     * @param  string  $key
-     * @return bool
-     */
-    public function forget($key)
-    {
-        return (bool) $this->connection()->del($this->prefix.$key);
-    }
+  /**
+   * Get the Redis connection instance.
+   *
+   * @return \Predis\ClientInterface
+   */
+  public function connection()
+  {
+    return $this->redis->connection($this->connection);
+  }
 
-    /**
-     * Remove all items from the cache.
-     *
-     * @return void
-     */
-    public function flush()
-    {
-        $this->connection()->flushdb();
-    }
+  /**
+   * Set the connection name to be used.
+   *
+   * @param  string  $connection
+   * @return void
+   */
+  public function setConnection($connection)
+  {
+    $this->connection = $connection;
+  }
 
-    /**
-     * Begin executing a new tags operation.
-     *
-     * @param  array|mixed  $names
-     * @return \Elucidate\Cache\RedisTaggedCache
-     */
-    public function tags($names)
-    {
-        return new RedisTaggedCache($this, new TagSet($this, is_array($names) ? $names : func_get_args()));
-    }
+  /**
+   * Get the Redis database instance.
+   *
+   * @return \Illuminate\Redis\Database
+   */
+  public function getRedis()
+  {
+    return $this->redis;
+  }
 
-    /**
-     * Get the Redis connection instance.
-     *
-     * @return \Predis\ClientInterface
-     */
-    public function connection()
-    {
-        return $this->redis->connection($this->connection);
-    }
-
-    /**
-     * Set the connection name to be used.
-     *
-     * @param  string  $connection
-     * @return void
-     */
-    public function setConnection($connection)
-    {
-        $this->connection = $connection;
-    }
-
-    /**
-     * Get the Redis database instance.
-     *
-     * @return \Illuminate\Redis\Database
-     */
-    public function getRedis()
-    {
-        return $this->redis;
-    }
-
-    /**
-     * Get the cache key prefix.
-     *
-     * @return string
-     */
-    public function getPrefix()
-    {
-        return $this->prefix;
-    }
+  /**
+   * Get the cache key prefix.
+   *
+   * @return string
+   */
+  public function getPrefix()
+  {
+    return $this->prefix;
+  }
 }

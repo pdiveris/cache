@@ -95,14 +95,33 @@ class Repository implements CacheContract, ArrayAccess
 
     if (is_null($value)) {
       $this->fireCacheEvent('missed', [$key]);
-
       $value = value($default);
     } else {
       $this->fireCacheEvent('hit', [$key, $value]);
     }
-
     return $value;
   }
+
+  /**
+   * Retrieve an item from the cache by key.
+   *
+   * @param  string  $key
+   * @return mixed
+   * @author PD
+   */
+  public function getRaw($key, $default = null)
+  {
+    $value = $this->store->getRaw($key);
+
+    if (is_null($value)) {
+      $this->fireCacheEvent('missed', [$key]);
+      $value = value($default);
+    } else {
+      $this->fireCacheEvent('hit', [$key, $value]);
+    }
+    return $value;
+  }
+
 
   /**
    * Retrieve the keys matching pattern from the cache
@@ -142,7 +161,7 @@ class Repository implements CacheContract, ArrayAccess
   }
 
  /**
-    * @author PD
+  * @author PD
   */
   public function type($key = '') 
   {
@@ -153,9 +172,22 @@ class Repository implements CacheContract, ArrayAccess
     } else {
       $this->fireCacheEvent('hit', [$key, $type]);
     }
-
     return $type;
+  }
 
+ /**
+  * @author PD
+  */
+  public function strlen($key = '') 
+  {
+    $len = $this->store->strlen($key);
+    
+    if (is_null($len)) {
+      $this->fireCacheEvent('missed', [$key]);
+    } else {
+      $this->fireCacheEvent('hit', [$key, $len]);
+    }
+    return $len;
   }
 
   /**
